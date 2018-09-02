@@ -1,15 +1,16 @@
 #!perl
 
 use lib "./" ;
-use DBI;
 use COMMON;
-
 
 my $dbFile="./patents.sqlite";
 
+print "This script create SQLite database and tables patent_details, image_details\n\n";
+
+
 my $sql="
 create table if not exists patent_details (
-  patent_number text  PRIMARY KEY, 
+  patent_number text PRIMARY KEY , 
   country text,
   ip_type text,
   year  integer,
@@ -24,7 +25,12 @@ create table if not exists patent_details (
   Inventor text,
   drawing_sheets integer,
   figures integer
-)
+);
+create table if not exists image_details (
+  patent_number text, 
+  filename text,
+  figure_caption text
+);
 ";
 
 

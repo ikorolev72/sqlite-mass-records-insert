@@ -1,5 +1,6 @@
 # common functions and variables
 use DBI;
+use Data::Dumper;
 
 
 my $dbFile="./patents.sqlite";
@@ -16,8 +17,8 @@ my $user     = "";
 my $password = "";
 
 my $dbh = DBI->connect($dsn, $user, $password, {
-   PrintError       => 0,
-   RaiseError       => 1,
+   PrintError       => 1,
+   RaiseError       => 0,
    AutoCommit       => 0,
    FetchHashKeyName => 'NAME_lc',
 }) or w2log ( "Cannot connect to database : $DBI::errstr" );
@@ -42,16 +43,46 @@ sub get_date {
 
 sub db_exec {
 	my $dbh=shift;
-  my $stmt=shift;
+  my $sql=shift;
 	my $sth; 
 	my $rv;
 
   eval{
-	  $sth = $dbh->prepare( $stmt );
+	  $sth = $dbh->prepare( $sql );
     $rv = $sth->execute( );
   };
 	if ( $@ ) {
-		w2log ( "Someting wrong with database  : $DBI::errstr ". $@  );
+		w2log ( "Someting wrong : sql command : $sql . Error: $DBI::errstr ". $@  );
+		return 0;
+	}	
+	return 1;
+}
+
+sub db_insert {
+	my $dbh=shift;
+  my $table=shift;	
+  my $record=shift;
+	my $sth; 
+	my $rv;
+  my @columns=();
+  my @values=();
+  foreach my $key ( keys(%{$record}) ) {
+    push( @columns, $key );
+    push( @values, $record->{ $key } );
+  }	
+	#my $sql="INSERT OR IGNORE into $table
+	my $sql="INSERT into $table
+					( ". join(',', @columns  ) ." )
+					values 
+					( ".join( ',', map{ '?' } @columns )." ) ;";	
+
+#print Dumper( $sql, @values );
+  eval{
+	  $sth = $dbh->prepare( $sql );
+    $rv = $sth->execute( @values );
+  };
+	if ( $@ ) {
+		w2log ( "Someting wrong : sql command : $sql . Error: $DBI::errstr ". $@  );
 		return 0;
 	}	
 	return 1;
