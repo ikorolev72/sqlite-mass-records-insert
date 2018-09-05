@@ -97,8 +97,41 @@ sub w2log {
 	#print STDERR $msg;
 	#close (LOG);
   if( ! $noPrint ) {
-	  print STDOUT get_date()."\t$msg\n";
+	  print STDERR get_date()."\t$msg\n";
   }
+}
+
+
+sub parse_data_patent_details {
+  my $str=shift;
+  my $record;
+  my ( $country, $patent_number, $ip_type, $year )=split( /\s+/, $str, 4 ) ;
+  $record->{'country'}=$country;
+  $record->{'patent_number'}=$patent_number;
+  $record->{'ip_type'}=$ip_type;
+  $record->{'year'}=$year;
+	# if do not defined any element
+	if( !$country || !$patent_number || !$ip_type || !$year ) {
+		return(0);
+	}	
+  return( $record );
+}
+
+
+
+sub parse_data_image_details {
+  my $str=shift;
+  my $record;
+  my ( $filename, $patent_number, $figure_caption)=split( /\s+/, $str, 3 ) ;
+  $record->{'patent_number'}=$patent_number;
+  $record->{'filename'}=$filename;
+  $record->{'figure_caption'}=$figure_caption;
+
+	# if do not defined any element
+	if( !$filename || !$patent_number  ) {
+		return(0);
+	}
+  return( $record );
 }
 
 

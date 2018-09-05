@@ -7,7 +7,11 @@ use Getopt::Long;
 
 my $dbFile="./patents.sqlite";
 my $filename='';
-my $commitAfterRecords=1000; # commit when inserted so records 
+my $table='patent_details';
+my $commitAfterRecords=10000; # commit when inserted so records 
+my $help=0;
+my $version="1.1 2018.09.03";
+
 
 GetOptions (
         'filename=s' => \$filename,
@@ -30,44 +34,32 @@ if( !$dbh ) {
   exit(1);
 }
 
-if ( ! db_exec( $dbh, $sql )) {
-  db_disconnect($dbh);
-  exit(1);  
-}
-
 open( IN, $filename ) || die "Cannot open file $filename";
 
 my $recordsCount=0;
 while(<IN>){
   chomp();
   my $record=parse_data_patent_details( $_ );
-  if ( db_insert( $dbh, 'patent_details', $record )) {
+  if( !$record ) {
+    w2log( "Cannot insert data into table $table, incorrect data: $_") ;
+    next;
+  }  
+  if ( db_insert( $dbh, $table, $record )) {
     $recordsCount++;
-    print "$recordsCount\n";
   }
   if( ($recordsCount % $commitAfterRecords) == 0 ) {
     $dbh->commit ;
+    print "Inserted $recordsCount records\n";
   }  
 }
 close(IN);
 $dbh->commit ;
 
 db_disconnect($dbh);
-print "Inserted $recordsCount records\nDone\n";
+print "Inserted $recordsCount records\n";
+print "Done\n";
 
 
-
-sub parse_data_patent_details {
-  my $str=shift;
-  my $record;
-  #US	US9854720	patent-grant	2017
-  my @data=split( /\s+/, $str) ;
-  $record->{'country'}=$data[0];
-  $record->{'patent_number'}=$data[1];
-  $record->{'ip_type'}=$data[2];
-  $record->{'year'}=$data[3];
-  return( $record );
-}
 
 
 sub show_help {
@@ -82,8 +74,6 @@ Where:
 	--help - this help
 Sample:	${0} --filename=Patent_details_table.txt
 ");
-	print "Press ENTER to exit:";
-	<STDIN>;
 	exit (1);
 }
 

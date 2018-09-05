@@ -7,6 +7,10 @@ my $dbFile="./patents.sqlite";
 
 print "This script create SQLite database and tables patent_details, image_details\n\n";
 
+my $dbh=db_connect( $dbFile );
+if( !$dbh ) {
+  exit(1);
+}
 
 my $sql="
 create table if not exists patent_details (
@@ -26,6 +30,16 @@ create table if not exists patent_details (
   drawing_sheets integer,
   figures integer
 );
+";
+
+if ( ! db_exec( $dbh, $sql )) {
+  db_disconnect($dbh);
+  exit(1);  
+}
+$dbh->commit ;
+print "Table patent_details was created\n";
+
+my $sql="
 create table if not exists image_details (
   patent_number text, 
   filename text,
@@ -33,17 +47,13 @@ create table if not exists image_details (
 );
 ";
 
-
-my $dbh=db_connect( $dbFile );
-if( !$dbh ) {
-  exit(1);
-}
-
 if ( ! db_exec( $dbh, $sql )) {
   db_disconnect($dbh);
   exit(1);  
 }
-
 $dbh->commit ;
+print "Table image_details was created\n";
+
+
 db_disconnect($dbh);
 print "Done\n";
